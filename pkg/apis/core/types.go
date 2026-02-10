@@ -5233,6 +5233,11 @@ type ServiceSpec struct {
 	// endpoints that are in the same zone.
 	// +optional
 	TrafficDistribution *string
+
+	// MinReady specifies the minimum number of ready pods required before the service
+	// starts routing traffic. Defaults to 1.
+	// +optional
+	MinReady *int32
 }
 
 // ServicePort represents the port on which the service is exposed

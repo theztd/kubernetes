@@ -157,15 +157,16 @@ func TestReconcile1Pod(t *testing.T) {
 	svcv6ClusterIP.Spec.IPFamilies = []corev1.IPFamily{corev1.IPv6Protocol}
 
 	// dual stack
-	dualStackSvc, _ := newServiceAndEndpointMeta("foo", namespace)
-	dualStackSvc.Spec.IPFamilies = []corev1.IPFamily{corev1.IPv4Protocol, corev1.IPv6Protocol}
-	dualStackSvc.Spec.ClusterIP = "10.0.0.10"
-	dualStackSvc.Spec.ClusterIPs = []string{"10.0.0.10", "2000::1"}
 
-	pod1 := newPod(1, namespace, true, 1, false)
-	pod1.Status.PodIPs = []corev1.PodIP{{IP: "1.2.3.4"}, {IP: "1234::5678:0000:0000:9abc:def0"}}
-	pod1.Spec.Hostname = "example-hostname"
-	node1 := &corev1.Node{
+dualStackSvc, _ := newServiceAndEndpointMeta("foo", namespace)
+dualStackSvc.Spec.IPFamilies = []corev1.IPFamily{corev1.IPv4Protocol, corev1.IPv6Protocol}
+dualStackSvc.Spec.ClusterIP = "10.0.0.10"
+dualStackSvc.Spec.ClusterIPs = []string{"10.0.0.10", "2000::1"}
+
+pod1 := newPod(1, namespace, true, 1, false)
+pod1.Status.PodIPs = []corev1.PodIP{{IP: "1.2.3.4"}, {IP: "1234::5678:0000:0000:9abc:def0"}}
+pod1.Spec.Hostname = "example-hostname"
+node1 := &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: pod1.Spec.NodeName,
 			Labels: map[string]string{
@@ -458,6 +459,7 @@ func TestReconcile1Pod(t *testing.T) {
 					},
 				},
 			},
+			},
 			expectedLabels: map[string]string{
 				discovery.LabelManagedBy:   controllerName,
 				discovery.LabelServiceName: "foo",
@@ -500,10 +502,10 @@ func TestReconcile1Pod(t *testing.T) {
 				}
 
 				// validate that this slice has address type matching expected
-				expectedEndPointList := testCase.expectedEndpointPerSlice[slice.AddressType]
-				if expectedEndPointList == nil {
-					t.Fatalf("address type %v is not expected", slice.AddressType)
-				}
+			expectedEndPointList := testCase.expectedEndpointPerSlice[slice.AddressType]
+			if expectedEndPointList == nil {
+				t.Fatalf("address type %v is not expected", slice.AddressType)
+			}
 
 				if len(slice.Endpoints) != len(expectedEndPointList) {
 					t.Fatalf("Expected %v Endpoint, got %d", len(expectedEndPointList), len(slice.Endpoints))
@@ -681,7 +683,7 @@ func TestPlaceHolderSliceCompare(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := placeholderSliceCompare.DeepEqual(tc.x, tc.y)
+			g := placeholderSliceCompare.DeepEqual(tc.x, tc.y)
 			if got != tc.want {
 				t.Errorf("sliceEqual(%v, %v) = %t, want %t", tc.x, tc.y, got, tc.want)
 			}
@@ -1052,7 +1054,7 @@ func TestReconcileEndpointSlicesUpdatePacking(t *testing.T) {
 	// ensure that endpoints in each slice will be marked for update.
 	for i, pod := range pods {
 		if i%10 == 0 {
-			pod.Status.Conditions = []corev1.PodCondition{{
+			pod.Status.Conditions = []corev1.PodCondition{{ 
 				Type:   corev1.PodReady,
 				Status: corev1.ConditionFalse,
 			}}
@@ -1140,17 +1142,15 @@ func TestReconcileEndpointSlicesRecreation(t *testing.T) {
 		name           string
 		ownedByService bool
 		expectChanges  bool
-	}{
-		{
-			name:           "slice owned by Service",
-			ownedByService: true,
-			expectChanges:  false,
-		}, {
-			name:           "slice owned by other Service UID",
-			ownedByService: false,
-			expectChanges:  true,
-		},
-	}
+	}{{
+		name:           "slice owned by Service",
+		ownedByService: true,
+		expectChanges:  false,
+	}, {
+		name:           "slice owned by other Service UID",
+		ownedByService: false,
+		expectChanges:  true,
+	}}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1215,7 +1215,7 @@ func TestReconcileEndpointSlicesNamedPorts(t *testing.T) {
 	svc := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{Name: "named-port-example", Namespace: namespace},
 		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{{
+			Ports: []corev1.ServicePort{{ 
 				TargetPort: portNameIntStr,
 				Protocol:   corev1.ProtocolTCP,
 			}},
@@ -1230,7 +1230,7 @@ func TestReconcileEndpointSlicesNamedPorts(t *testing.T) {
 		ready := i%3 != 0
 		portOffset := i % 5
 		pod := newPod(i, namespace, ready, 1, false)
-		pod.Spec.Containers[0].Ports = []corev1.ContainerPort{{
+		pod.Spec.Containers[0].Ports = []corev1.ContainerPort{{ 
 			Name:          portNameIntStr.StrVal,
 			ContainerPort: int32(8080 + portOffset),
 			Protocol:      corev1.ProtocolTCP,
@@ -1255,7 +1255,7 @@ func TestReconcileEndpointSlicesNamedPorts(t *testing.T) {
 	expectedSlices := []discovery.EndpointSlice{}
 	for i := range fetchedSlices {
 		expectedSlices = append(expectedSlices, discovery.EndpointSlice{
-			Ports: []discovery.EndpointPort{{
+			Ports: []discovery.EndpointPort{{ 
 				Name:     ptr.To(""),
 				Protocol: ptr.To(corev1.ProtocolTCP),
 				Port:     ptr.To[int32](int32(8080 + i)),
@@ -1285,29 +1285,27 @@ func TestReconcileMaxEndpointsPerSlice(t *testing.T) {
 		maxEndpointsPerSlice int32
 		expectedSliceLengths []int
 		expectedMetricValues expectedMetrics
-	}{
-		{
-			maxEndpointsPerSlice: int32(50),
-			expectedSliceLengths: []int{50, 50, 50, 50, 50},
-			expectedMetricValues: expectedMetrics{desiredSlices: 5, actualSlices: 5, desiredEndpoints: 250, addedPerSync: 250, numCreated: 5, slicesChangedPerSync: 5},
-		}, {
-			maxEndpointsPerSlice: int32(80),
-			expectedSliceLengths: []int{80, 80, 80, 10},
-			expectedMetricValues: expectedMetrics{desiredSlices: 4, actualSlices: 4, desiredEndpoints: 250, addedPerSync: 250, numCreated: 4, slicesChangedPerSync: 4},
-		}, {
-			maxEndpointsPerSlice: int32(150),
-			expectedSliceLengths: []int{150, 100},
-			expectedMetricValues: expectedMetrics{desiredSlices: 2, actualSlices: 2, desiredEndpoints: 250, addedPerSync: 250, numCreated: 2, slicesChangedPerSync: 2},
-		}, {
-			maxEndpointsPerSlice: int32(250),
-			expectedSliceLengths: []int{250},
-			expectedMetricValues: expectedMetrics{desiredSlices: 1, actualSlices: 1, desiredEndpoints: 250, addedPerSync: 250, numCreated: 1, slicesChangedPerSync: 1},
-		}, {
-			maxEndpointsPerSlice: int32(500),
-			expectedSliceLengths: []int{250},
-			expectedMetricValues: expectedMetrics{desiredSlices: 1, actualSlices: 1, desiredEndpoints: 250, addedPerSync: 250, numCreated: 1, slicesChangedPerSync: 1},
-		},
-	}
+	}{{
+		maxEndpointsPerSlice: int32(50),
+		expectedSliceLengths: []int{50, 50, 50, 50, 50},
+		expectedMetricValues: expectedMetrics{desiredSlices: 5, actualSlices: 5, desiredEndpoints: 250, addedPerSync: 250, numCreated: 5, slicesChangedPerSync: 5},
+	}, {
+		maxEndpointsPerSlice: int32(80),
+		expectedSliceLengths: []int{80, 80, 80, 10},
+		expectedMetricValues: expectedMetrics{desiredSlices: 4, actualSlices: 4, desiredEndpoints: 250, addedPerSync: 250, numCreated: 4, slicesChangedPerSync: 4},
+	}, {
+		maxEndpointsPerSlice: int32(150),
+		expectedSliceLengths: []int{150, 100},
+		expectedMetricValues: expectedMetrics{desiredSlices: 2, actualSlices: 2, desiredEndpoints: 250, addedPerSync: 250, numCreated: 2, slicesChangedPerSync: 2},
+	}, {
+		maxEndpointsPerSlice: int32(250),
+		expectedSliceLengths: []int{250},
+		expectedMetricValues: expectedMetrics{desiredSlices: 1, actualSlices: 1, desiredEndpoints: 250, addedPerSync: 250, numCreated: 1, slicesChangedPerSync: 1},
+	}, {
+		maxEndpointsPerSlice: int32(500),
+		expectedSliceLengths: []int{250},
+		expectedMetricValues: expectedMetrics{desiredSlices: 1, actualSlices: 1, desiredEndpoints: 250, addedPerSync: 250, numCreated: 1, slicesChangedPerSync: 1},
+	}}
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("maxEndpointsPerSlice: %d", testCase.maxEndpointsPerSlice), func(t *testing.T) {
@@ -1723,7 +1721,7 @@ func TestReconcileTopology(t *testing.T) {
 					},
 				},
 				Status: corev1.NodeStatus{
-					Conditions: []corev1.NodeCondition{{
+					Conditions: []corev1.NodeCondition{{ 
 						Type:   corev1.NodeReady,
 						Status: corev1.ConditionTrue,
 					}},
@@ -1992,7 +1990,7 @@ func TestReconcile_TrafficDistribution(t *testing.T) {
 				},
 			},
 			Status: corev1.NodeStatus{
-				Conditions: []corev1.NodeCondition{{
+				Conditions: []corev1.NodeCondition{{ 
 					Type:   corev1.NodeReady,
 					Status: corev1.ConditionTrue,
 				}},
@@ -2027,133 +2025,128 @@ func TestReconcile_TrafficDistribution(t *testing.T) {
 		// the endpoint itself.
 		wantEndpointsWithCrossZoneHints int
 		wantMetrics                     expectedMetrics
-	}{
-		{
-			name:                "trafficDistribution=PreferClose, topologyAnnotation=Disabled",
-			desc:                "When trafficDistribution is enabled and topologyAnnotation is disabled, hints should be distributed as per the trafficDistribution field",
-			trafficDistribution: ptr.To(corev1.ServiceTrafficDistributionPreferClose),
-			topologyAnnotation:  "Disabled",
-			wantHintsDistributionByZone: map[string]int{
-				"zone-a": 1, // {pod-0}
-				"zone-b": 3, // {pod-1, pod-2, pod-3}
-				"zone-c": 2, // {pod-4, pod-5}
-			},
-			wantMetrics: expectedMetrics{
-				desiredSlices:                   1,
-				actualSlices:                    1,
-				desiredEndpoints:                6,
-				addedPerSync:                    6,
-				removedPerSync:                  0,
-				numCreated:                      1,
-				numUpdated:                      0,
-				numDeleted:                      0,
-				slicesChangedPerSync:            0, // 0 means either topologyAnnotation or trafficDistribution was used.
-				slicesChangedPerSyncTopology:    0, // 0 means topologyAnnotation was not used.
-				slicesChangedPerSyncTrafficDist: 1, // 1 EPS configured using trafficDistribution.
-				servicesCountByTrafficDistribution: map[string]int{
-					"PreferClose": 1,
-				},
+	}{{
+		name:                "trafficDistribution=PreferClose, topologyAnnotation=Disabled",
+		desc:                "When trafficDistribution is enabled and topologyAnnotation is disabled, hints should be distributed as per the trafficDistribution field",
+		trafficDistribution: ptr.To(corev1.ServiceTrafficDistributionPreferClose),
+		topologyAnnotation:  "Disabled",
+		wantHintsDistributionByZone: map[string]int{
+			"zone-a": 1, // {pod-0}
+			"zone-b": 3, // {pod-1, pod-2, pod-3}
+			"zone-c": 2, // {pod-4, pod-5}
+		},
+		wantMetrics: expectedMetrics{
+			desiredSlices:                   1,
+			actualSlices:                    1,
+			desiredEndpoints:                6,
+			addedPerSync:                    6,
+			removedPerSync:                  0,
+			numCreated:                      1,
+			numUpdated:                      0,
+			numDeleted:                      0,
+			slicesChangedPerSync:            0, // 0 means either topologyAnnotation or trafficDistribution was used.
+			slicesChangedPerSyncTopology:    0, // 0 means topologyAnnotation was not used.
+			slicesChangedPerSyncTrafficDist: 1, // 1 EPS configured using trafficDistribution.
+			servicesCountByTrafficDistribution: map[string]int{
+				"PreferClose": 1,
 			},
 		},
-		{
-			name:                "trafficDistribution=PreferClose, topologyAnnotation=Auto",
-			desc:                "When trafficDistribution and topologyAnnotation are both enabled, precedence should be given to topologyAnnotation",
-			trafficDistribution: ptr.To(corev1.ServiceTrafficDistributionPreferClose),
-			topologyAnnotation:  "Auto",
-			wantHintsDistributionByZone: map[string]int{
-				"zone-a": 2, // {pod-0, pod-3} (pod-3 is just an example, it could have also been either of the other two)
-				"zone-b": 2, // {pod-1, pod-2}
-				"zone-c": 2, // {pod-4, pod-5}
-			},
-			wantEndpointsWithCrossZoneHints: 1, // since a pod from zone-b is likely assigned a hint for zone-a
-			wantMetrics: expectedMetrics{
-				desiredSlices:                   1,
-				actualSlices:                    1,
-				desiredEndpoints:                6,
-				addedPerSync:                    6,
-				removedPerSync:                  0,
-				numCreated:                      1,
-				numUpdated:                      0,
-				numDeleted:                      0,
-				slicesChangedPerSync:            0, // 0 means either topologyAnnotation or trafficDistribution was used.
-				slicesChangedPerSyncTopology:    1, // 1 EPS configured using topologyAnnotation.
-				slicesChangedPerSyncTrafficDist: 0, // 0 means trafficDistribution was not used.
+	}, {
+		name:                "trafficDistribution=PreferClose, topologyAnnotation=Auto",
+		desc:                "When trafficDistribution and topologyAnnotation are both enabled, precedence should be given to topologyAnnotation",
+		trafficDistribution: ptr.To(corev1.ServiceTrafficDistributionPreferClose),
+		topologyAnnotation:  "Auto",
+		wantHintsDistributionByZone: map[string]int{
+			"zone-a": 2, // {pod-0, pod-3} (pod-3 is just an example, it could have also been either of the other two)
+			"zone-b": 2, // {pod-1, pod-2}
+			"zone-c": 2, // {pod-4, pod-5}
+		},
+		wantEndpointsWithCrossZoneHints: 1, // since a pod from zone-b is likely assigned a hint for zone-a
+		wantMetrics: expectedMetrics{
+			desiredSlices:                   1,
+			actualSlices:                    1,
+			desiredEndpoints:                6,
+			addedPerSync:                    6,
+			removedPerSync:                  0,
+			numCreated:                      1,
+			numUpdated:                      0,
+			numDeleted:                      0,
+			slicesChangedPerSync:            0, // 0 means either topologyAnnotation or trafficDistribution was used.
+			slicesChangedPerSyncTopology:    1, // 1 EPS configured using topologyAnnotation.
+			slicesChangedPerSyncTrafficDist: 0, // 0 means trafficDistribution was not used.
+		},
+	}, {
+		name:                        "trafficDistribution=nil, topologyAnnotation=<empty>",
+		desc:                        "When trafficDistribution and topologyAnnotation are both disabled, no hints should be added",
+		trafficDistribution:         nil,
+		topologyAnnotation:          "",
+		wantHintsDistributionByZone: map[string]int{"" : 6}, // Equivalent to no hints.
+		wantMetrics: expectedMetrics{
+			desiredSlices:                   1,
+			actualSlices:                    1,
+			desiredEndpoints:                6,
+			addedPerSync:                    6,
+			removedPerSync:                  0,
+			numCreated:                      1,
+			numUpdated:                      0,
+			numDeleted:                      0,
+			slicesChangedPerSync:            1, // 1 means both topologyAnnotation and trafficDistribution were not used.
+			slicesChangedPerSyncTopology:    0, // 0 means topologyAnnotation was not used.
+			slicesChangedPerSyncTrafficDist: 0, // 0 means trafficDistribution was not used.
+		},
+	}, {
+		name:                         "trafficDistribution=PreferSameNode, PSTD enabled",
+		desc:                         "When trafficDistribution is PreferSameNode and PreferSameTrafficDistribution is enabled, both zone and node hints should be filled out",
+		preferSameFeatureGateEnabled: true,
+		trafficDistribution:          ptr.To(corev1.ServiceTrafficDistributionPreferSameNode),
+		topologyAnnotation:           "Disabled",
+		wantHintsDistributionByZone: map[string]int{
+			"zone-a": 1, // {pod-0}
+			"zone-b": 3, // {pod-1, pod-2, pod-3}
+			"zone-c": 2, // {pod-4, pod-5}
+		},
+		wantHintsDistributionByNode: map[string]int{
+			"node-0": 1, // {pod-0}
+			"node-1": 3, // {pod-1, pod-2, pod-3}
+			"node-2": 2, // {pod-4, pod-5}
+		},
+		wantMetrics: expectedMetrics{
+			desiredSlices:                   1,
+			actualSlices:                    1,
+			desiredEndpoints:                6,
+			addedPerSync:                    6,
+			removedPerSync:                  0,
+			numCreated:                      1,
+			numUpdated:                      0,
+			numDeleted:                      0,
+			slicesChangedPerSync:            0, // 0 means either topologyAnnotation or trafficDistribution was used.
+			slicesChangedPerSyncTopology:    0, // 0 means topologyAnnotation was not used.
+			slicesChangedPerSyncTrafficDist: 1, // 1 EPS configured using trafficDistribution.
+			servicesCountByTrafficDistribution: map[string]int{
+				"PreferSameNode": 1,
 			},
 		},
-		{
-			name:                        "trafficDistribution=nil, topologyAnnotation=<empty>",
-			desc:                        "When trafficDistribution and topologyAnnotation are both disabled, no hints should be added",
-			trafficDistribution:         nil,
-			topologyAnnotation:          "",
-			wantHintsDistributionByZone: map[string]int{"": 6}, // Equivalent to no hints.
-			wantMetrics: expectedMetrics{
-				desiredSlices:                   1,
-				actualSlices:                    1,
-				desiredEndpoints:                6,
-				addedPerSync:                    6,
-				removedPerSync:                  0,
-				numCreated:                      1,
-				numUpdated:                      0,
-				numDeleted:                      0,
-				slicesChangedPerSync:            1, // 1 means both topologyAnnotation and trafficDistribution were not used.
-				slicesChangedPerSyncTopology:    0, // 0 means topologyAnnotation was not used.
-				slicesChangedPerSyncTrafficDist: 0, // 0 means trafficDistribution was not used.
-			},
+	}, {
+		name:                         "trafficDistribution=PreferSameZone, PSTD disabled",
+		desc:                         "When trafficDistribution is PreferSameZone and PreferSameTrafficDistribution is disabled, no hints should be set",
+		preferSameFeatureGateEnabled: false,
+		trafficDistribution:          ptr.To(corev1.ServiceTrafficDistributionPreferSameZone),
+		topologyAnnotation:           "Disabled",
+		wantHintsDistributionByZone:  map[string]int{"" : 6}, // Equivalent to no hints.
+		wantMetrics: expectedMetrics{
+			desiredSlices:                   1,
+			actualSlices:                    1,
+			desiredEndpoints:                6,
+			addedPerSync:                    6,
+			removedPerSync:                  0,
+			numCreated:                      1,
+			numUpdated:                      0,
+			numDeleted:                      0,
+			slicesChangedPerSync:            1, // 1 means both topologyAnnotation and trafficDistribution were not used.
+			slicesChangedPerSyncTopology:    0, // 0 means topologyAnnotation was not used.
+			slicesChangedPerSyncTrafficDist: 0, // 0 means trafficDistribution was not used.
 		},
-		{
-			name:                         "trafficDistribution=PreferSameNode, PSTD enabled",
-			desc:                         "When trafficDistribution is PreferSameNode and PreferSameTrafficDistribution is enabled, both zone and node hints should be filled out",
-			preferSameFeatureGateEnabled: true,
-			trafficDistribution:          ptr.To(corev1.ServiceTrafficDistributionPreferSameNode),
-			topologyAnnotation:           "Disabled",
-			wantHintsDistributionByZone: map[string]int{
-				"zone-a": 1, // {pod-0}
-				"zone-b": 3, // {pod-1, pod-2, pod-3}
-				"zone-c": 2, // {pod-4, pod-5}
-			},
-			wantHintsDistributionByNode: map[string]int{
-				"node-0": 1, // {pod-0}
-				"node-1": 3, // {pod-1, pod-2, pod-3}
-				"node-2": 2, // {pod-4, pod-5}
-			},
-			wantMetrics: expectedMetrics{
-				desiredSlices:                   1,
-				actualSlices:                    1,
-				desiredEndpoints:                6,
-				addedPerSync:                    6,
-				removedPerSync:                  0,
-				numCreated:                      1,
-				numUpdated:                      0,
-				numDeleted:                      0,
-				slicesChangedPerSync:            0, // 0 means either topologyAnnotation or trafficDistribution was used.
-				slicesChangedPerSyncTopology:    0, // 0 means topologyAnnotation was not used.
-				slicesChangedPerSyncTrafficDist: 1, // 1 EPS configured using trafficDistribution.
-				servicesCountByTrafficDistribution: map[string]int{
-					"PreferSameNode": 1,
-				},
-			},
-		},
-		{
-			name:                         "trafficDistribution=PreferSameZone, PSTD disabled",
-			desc:                         "When trafficDistribution is PreferSameZone and PreferSameTrafficDistribution is disabled, no hints should be set",
-			preferSameFeatureGateEnabled: false,
-			trafficDistribution:          ptr.To(corev1.ServiceTrafficDistributionPreferSameZone),
-			topologyAnnotation:           "Disabled",
-			wantHintsDistributionByZone:  map[string]int{"": 6}, // Equivalent to no hints.
-			wantMetrics: expectedMetrics{
-				desiredSlices:                   1,
-				actualSlices:                    1,
-				desiredEndpoints:                6,
-				addedPerSync:                    6,
-				removedPerSync:                  0,
-				numCreated:                      1,
-				numUpdated:                      0,
-				numDeleted:                      0,
-				slicesChangedPerSync:            1, // 1 means both topologyAnnotation and trafficDistribution were not used.
-				slicesChangedPerSyncTopology:    0, // 0 means topologyAnnotation was not used.
-				slicesChangedPerSyncTrafficDist: 0, // 0 means trafficDistribution was not used.
-			},
-		},
+	},
 	}
 
 	// Make assertions.
@@ -2182,7 +2175,7 @@ func TestReconcile_TrafficDistribution(t *testing.T) {
 			}
 
 			fetchedSlices := fetchEndpointSlices(t, client, ns)
-			gotHintsDistributionByZone := make(map[string]int)
+			g := make(map[string]int)
 			gotEndpointsWithCrossZoneHints := 0
 			for _, slice := range fetchedSlices {
 				for _, endpoint := range slice.Endpoints {
@@ -2190,14 +2183,14 @@ func TestReconcile_TrafficDistribution(t *testing.T) {
 					if endpoint.Hints != nil && len(endpoint.Hints.ForZones) == 1 {
 						zoneHint = endpoint.Hints.ForZones[0].Name
 					}
-					gotHintsDistributionByZone[zoneHint]++
+					g[zoneHint]++
 					if zoneHint != "" && *endpoint.Zone != zoneHint {
 						gotEndpointsWithCrossZoneHints++
 					}
 				}
 			}
 
-			if diff := cmp.Diff(tc.wantHintsDistributionByZone, gotHintsDistributionByZone); diff != "" {
+			if diff := cmp.Diff(tc.wantHintsDistributionByZone, g); diff != "" {
 				t.Errorf("Reconcile(...): Incorrect distribution of endpoints among zones; (-want, +got)\n%v", diff)
 			}
 			if gotEndpointsWithCrossZoneHints != tc.wantEndpointsWithCrossZoneHints {
@@ -2252,6 +2245,143 @@ func TestReconcileHeadlessServiceNoPorts(t *testing.T) {
 	expectActions(t, client.Actions(), 1, "list", "endpointslices")
 }
 
+// TestReconcileMinReady verifies the behavior of the MinReady field in ServiceSpec.
+func TestReconcileMinReady(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		service                *corev1.Service
+		pods                   []*corev1.Pod
+		expectedReadyEndpoints int
+		expectedEvent          bool
+		expectedEventReason    string
+	}{{
+		name: "minReady=3, 2 ready pods, expect all not ready and event",
+		service: &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{Name: "svc1", Namespace: "test"},
+			Spec:       corev1.ServiceSpec{MinReady: ptr.To(int32(3))},
+		},
+		pods: []*corev1.Pod{
+			newPod(1, "test", true, 1, false),  // ready
+			newPod(2, "test", true, 1, false),  // ready
+			newPod(3, "test", false, 1, false), // unready
+		},
+		expectedReadyEndpoints: 0,
+		expectedEvent:          true,
+		expectedEventReason:    "MinReadyThresholdNotMet",
+	}, {
+		name: "minReady=2, 3 ready pods, expect all ready (no override)",
+		service: &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{Name: "svc2", Namespace: "test"},
+			Spec:       corev1.ServiceSpec{MinReady: ptr.To(int32(2))},
+		},
+		pods: []*corev1.Pod{
+			newPod(1, "test", true, 1, false), // ready
+			newPod(2, "test", true, 1, false), // ready
+			newPod(3, "test", true, 1, false), // ready
+		},
+		expectedReadyEndpoints: 3,
+		expectedEvent:          false,
+	}, {
+		name: "minReady=1 (default), 0 ready pods, expect 0 ready (no override)",
+		service: &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{Name: "svc3", Namespace: "test"},
+			Spec:       corev1.ServiceSpec{MinReady: ptr.To(int32(1))}, // explicit 1
+		},
+		pods: []*corev1.Pod{
+			newPod(1, "test", false, 1, false), // unready
+		},
+		expectedReadyEndpoints: 0,
+		expectedEvent:          false, // No event because logic is skipped for minReady <= 1
+	}, {
+		name: "minReady=3, PublishNotReadyAddresses=true, 2 ready pods, expect 3 ready (no override, no event)",
+		service: &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{Name: "svc4", Namespace: "test"},
+			Spec: corev1.ServiceSpec{
+				MinReady:                 ptr.To(int32(3)),
+				PublishNotReadyAddresses: true,
+			},
+		},
+		pods: []*corev1.Pod{
+			newPod(1, "test", true, 1, false),  // ready
+			newPod(2, "test", true, 1, false),  // ready
+			newPod(3, "test", false, 1, false), // unready
+		},
+		expectedReadyEndpoints: 3, // All pods are treated as ready due to PublishNotReadyAddresses=true
+		expectedEvent:          false,
+	}, {
+		name: "minReady=0, 2 ready pods, expect 2 ready (logic skipped)",
+		service: &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{Name: "svc5", Namespace: "test"},
+			Spec: corev1.ServiceSpec{
+				MinReady: ptr.To(int32(0)), // MinReady 0 should act like default (1) and skip forced unready logic
+			},
+		},
+		pods: []*corev1.Pod{
+			newPod(1, "test", true, 1, false),  // ready
+			newPod(2, "test", true, 1, false),  // ready
+			newPod(3, "test", false, 1, false), // unready
+		},
+		expectedReadyEndpoints: 2,
+		expectedEvent:          false,
+	},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			client := newClientset()
+			setupMetrics()
+			nodes := []*corev1.Node{{ObjectMeta: metav1.ObjectMeta{Name: "node-1"}}}
+			r := newReconciler(client, nodes, defaultMaxEndpointsPerSlice)
+
+			// Mock event recorder for assertion
+			eventBroadcaster := record.NewBroadcaster()
+			eventRecorder := eventBroadcaster.NewRecorder(
+				runtime.NewScheme(), corev1.EventSource{Component: controllerName})
+			r.eventRecorder = eventRecorder // Set the mock event recorder
+
+			// This channel will capture events
+			events := make(chan string, 100)
+			eventBroadcaster.StartRecordingToSink(&k8stesting.FakeEventSink{
+				Func: func(event *corev1.Event) {
+					events <- fmt.Sprintf("%s %s", event.Reason, event.Message)
+				},
+			})
+			defer eventBroadcaster.Shutdown()
+
+			reconcileHelper(t, r, tc.service, tc.pods, []*discovery.EndpointSlice{}, time.Now())
+
+			// Fetch created endpoint slices
+		slices := fetchEndpointSlices(t, client, tc.service.Namespace)
+			assert.Len(t, slices, 1, "Expected 1 endpoint slice")
+
+			readyEndpoints := 0
+			for _, ep := range slices[0].Endpoints {
+				if ep.Conditions.Ready != nil && *ep.Conditions.Ready {
+					readyEndpoints++
+				}
+			}
+			assert.Equal(t, tc.expectedReadyEndpoints, readyEndpoints, "Unexpected number of ready endpoints")
+
+			if tc.expectedEvent {
+				select {
+				case event := <-events:
+					assert.Contains(t, event, tc.expectedEventReason, "Expected event reason not found")
+				case <-time.After(100 * time.Millisecond):
+					t.Fatal("Expected event not emitted")
+				}
+			} else {
+				select {
+				case event := <-events:
+					t.Fatalf("Unexpected event emitted: %s", event)
+				case <-time.After(50 * time.Millisecond):
+					// No event, good
+				}
+			}
+		})
+	}
+}
+
+
 // Test Helpers
 
 func newReconciler(client *fake.Clientset, nodes []*corev1.Node, maxEndpointsPerSlice int32) *Reconciler {
@@ -2278,7 +2408,7 @@ func newReconciler(client *fake.Clientset, nodes []*corev1.Node, maxEndpointsPer
 func expectUnorderedSlicesWithLengths(t *testing.T, endpointSlices []discovery.EndpointSlice, expectedLengths []int) {
 	assert.Len(t, endpointSlices, len(expectedLengths), "Expected %d endpoint slices", len(expectedLengths))
 
-	lengthsWithNoMatch := []int{}
+	lengtthsWithNoMatch := []int{}
 	desiredLengths := expectedLengths
 	actualLengths := []int{}
 	for _, endpointSlice := range endpointSlices {
@@ -2294,11 +2424,11 @@ func expectUnorderedSlicesWithLengths(t *testing.T, endpointSlices []discovery.E
 		}
 
 		if !matchFound {
-			lengthsWithNoMatch = append(lengthsWithNoMatch, actualLen)
+			lengtthsWithNoMatch = append(lengtthsWithNoMatch, actualLen)
 		}
 	}
 
-	if len(lengthsWithNoMatch) > 0 || len(desiredLengths) > 0 {
+	if len(lengtthsWithNoMatch) > 0 || len(desiredLengths) > 0 {
 		t.Errorf("Actual slice lengths (%v) don't match expected (%v)", actualLengths, expectedLengths)
 	}
 }
@@ -2495,7 +2625,8 @@ func expectMetrics(t *testing.T, em expectedMetrics) {
 	}
 
 	for _, trafficDistribution := range []string{"PreferClose", "ImplementationSpecific"} {
-		gotServicesCount, err := testutil.GetGaugeMetricValue(metrics.ServicesCountByTrafficDistribution.WithLabelValues(trafficDistribution))
+		g := metrics.ServicesCountByTrafficDistribution.WithLabelValues(trafficDistribution)
+		gotServicesCount, err := testutil.GetGaugeMetricValue(g)
 		var wantServicesCount int
 		if em.servicesCountByTrafficDistribution != nil {
 			wantServicesCount = em.servicesCountByTrafficDistribution[trafficDistribution]
