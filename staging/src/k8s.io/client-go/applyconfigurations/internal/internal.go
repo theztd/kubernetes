@@ -7910,6 +7910,9 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: string
           elementRelationship: atomic
+    - name: minReady
+      type:
+        scalar: numeric
     - name: ports
       type:
         list:

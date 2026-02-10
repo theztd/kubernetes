@@ -6428,6 +6428,11 @@ message ServiceSpec {
   // endpoints that are in the same zone.
   // +optional
   optional string trafficDistribution = 23;
+
+  // MinReady specifies the minimum number of ready pods required before the service
+  // starts routing traffic. Defaults to 1.
+  // +optional
+  optional int32 minReady = 24;
 }
 
 // ServiceStatus represents the current status of a service.

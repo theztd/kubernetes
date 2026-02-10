@@ -219,6 +219,9 @@ type ServiceSpecApplyConfiguration struct {
 	// strategy. If set to "PreferClose", implementations should prioritize
 	// endpoints that are in the same zone.
 	TrafficDistribution *string `json:"trafficDistribution,omitempty"`
+	// MinReady specifies the minimum number of ready pods required before the service
+	// starts routing traffic. Defaults to 1.
+	MinReady *int32 `json:"minReady,omitempty"`
 }
 
 // ServiceSpecApplyConfiguration constructs a declarative configuration of the ServiceSpec type for use with
@@ -403,5 +406,13 @@ func (b *ServiceSpecApplyConfiguration) WithInternalTrafficPolicy(value corev1.S
 // If called multiple times, the TrafficDistribution field is set to the value of the last call.
 func (b *ServiceSpecApplyConfiguration) WithTrafficDistribution(value string) *ServiceSpecApplyConfiguration {
 	b.TrafficDistribution = &value
+	return b
+}
+
+// WithMinReady sets the MinReady field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MinReady field is set to the value of the last call.
+func (b *ServiceSpecApplyConfiguration) WithMinReady(value int32) *ServiceSpecApplyConfiguration {
+	b.MinReady = &value
 	return b
 }

@@ -6181,6 +6181,11 @@ type ServiceSpec struct {
 	// endpoints that are in the same zone.
 	// +optional
 	TrafficDistribution *string `json:"trafficDistribution,omitempty" protobuf:"bytes,23,opt,name=trafficDistribution"`
+
+	// MinReady specifies the minimum number of ready pods required before the service
+	// starts routing traffic. Defaults to 1.
+	// +optional
+	MinReady *int32 `json:"minReady,omitempty" protobuf:"varint,24,opt,name=minReady"`
 }
 
 // ServicePort contains information on service's port.

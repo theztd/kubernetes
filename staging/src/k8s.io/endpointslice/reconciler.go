@@ -231,6 +231,32 @@ func (r *Reconciler) reconcileByAddressType(logger klog.Logger, service *corev1.
 		}
 	}
 
+	minReady := int32(1)
+	if service.Spec.MinReady != nil {
+		minReady = *service.Spec.MinReady
+	}
+
+	if minReady > 1 && !service.Spec.PublishNotReadyAddresses {
+		readyCount := 0
+		for _, endpoints := range desiredEndpointsByPortMap {
+			for _, ep := range endpoints {
+				if ep.Conditions.Ready != nil && *ep.Conditions.Ready {
+					readyCount++
+				}
+			}
+		}
+
+		if int32(readyCount) < minReady {
+			r.eventRecorder.Eventf(service, corev1.EventTypeWarning, "MinReadyThresholdNotMet", "Active endpoints (%d) below minReady (%d). All endpoints marked not ready.", readyCount, minReady)
+			notReady := false
+			for _, endpoints := range desiredEndpointsByPortMap {
+				for _, ep := range endpoints {
+					ep.Conditions.Ready = &notReady
+				}
+			}
+		}
+	}
+
 	spMetrics := metrics.NewServicePortCache()
 	totalAdded := 0
 	totalRemoved := 0

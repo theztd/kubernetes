@@ -13213,6 +13213,13 @@ func (m *ServiceSpec) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.MinReady != nil {
+		i = encodeVarintGenerated(dAtA, i, uint64(*m.MinReady))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xc0
+	}
 	if m.TrafficDistribution != nil {
 		i -= len(*m.TrafficDistribution)
 		copy(dAtA[i:], *m.TrafficDistribution)
@@ -19809,6 +19816,9 @@ func (m *ServiceSpec) Size() (n int) {
 		l = len(*m.TrafficDistribution)
 		n += 2 + l + sovGenerated(uint64(l))
 	}
+	if m.MinReady != nil {
+		n += 2 + sovGenerated(uint64(*m.MinReady))
+	}
 	return n
 }
 
@@ -23999,6 +24009,7 @@ func (this *ServiceSpec) String() string {
 		`LoadBalancerClass:` + valueToStringGenerated(this.LoadBalancerClass) + `,`,
 		`InternalTrafficPolicy:` + valueToStringGenerated(this.InternalTrafficPolicy) + `,`,
 		`TrafficDistribution:` + valueToStringGenerated(this.TrafficDistribution) + `,`,
+		`MinReady:` + valueToStringGenerated(this.MinReady) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -65572,6 +65583,26 @@ func (m *ServiceSpec) Unmarshal(dAtA []byte) error {
 			s := string(dAtA[iNdEx:postIndex])
 			m.TrafficDistribution = &s
 			iNdEx = postIndex
+		case 24:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinReady", wireType)
+			}
+			var v int32
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.MinReady = &v
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenerated(dAtA[iNdEx:])

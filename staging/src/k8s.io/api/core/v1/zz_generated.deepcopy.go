@@ -6156,6 +6156,11 @@ func (in *ServiceSpec) DeepCopyInto(out *ServiceSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.MinReady != nil {
+		in, out := &in.MinReady, &out.MinReady
+		*out = new(int32)
+		**out = **in
+	}
 	return
 }
 

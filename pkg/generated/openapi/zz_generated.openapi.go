@@ -31514,6 +31514,13 @@ func schema_k8sio_api_core_v1_ServiceSpec(ref common.ReferenceCallback) common.O
 							Format:      "",
 						},
 					},
+					"minReady": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MinReady specifies the minimum number of ready pods required before the service starts routing traffic. Defaults to 1.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
 				},
 			},
 		},
